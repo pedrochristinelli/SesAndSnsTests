@@ -2,15 +2,11 @@ package com.SesAndSnsTests.application.service.implementation;
 
 import com.SesAndSnsTests.application.service.CreateCalendarEventService;
 import com.SesAndSnsTests.domain.model.IcsEvent;
-import net.fortuna.ical4j.data.CalendarOutputter;
 import net.fortuna.ical4j.model.*;
 import net.fortuna.ical4j.model.component.VEvent;
 import net.fortuna.ical4j.model.property.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -19,9 +15,7 @@ import java.util.Date;
 @Service
 public class CreateCalendarEventServiceImpl implements CreateCalendarEventService {
 
-    public Calendar createEventByDate() {
-        Date date = new Date();
-
+    public Calendar createEventByDate(IcsEvent icsEvent) {
         //Create an iCal4J Calendar
         Calendar c = new Calendar();
 
@@ -30,12 +24,11 @@ public class CreateCalendarEventServiceImpl implements CreateCalendarEventServic
         c.add(Version.VERSION_2_0);
         c.add(CalScale.GREGORIAN);
 
-        c.add(createSingleEvent(date));
-
+        c.add(createSingleEvent(icsEvent.getDate(), icsEvent.getTimeBoxInHours(), icsEvent.getSummary(), icsEvent.getDescription()));
         return c;
     }
 
-    public VEvent createSingleEvent(Date date) {
+    private VEvent createSingleEvent(Date date, int timeBox, String summary, String description) {
         //Create a new calendar event that starts on 5th March 2021 at midday Australian Eastern Daylight Savings Time and goes for 1 hour.
         VEvent vEvent = new VEvent();
         java.time.ZonedDateTime now = java.time.ZonedDateTime.now();
@@ -57,11 +50,11 @@ public class CreateCalendarEventServiceImpl implements CreateCalendarEventServic
         } catch (ParseException e) {
             e.printStackTrace();
         }
-        vEvent.add(new Duration(java.time.Duration.ofHours(2)));
+        vEvent.add(new Duration(java.time.Duration.ofHours(timeBox)));
 
         //Add title and description
-        vEvent.add(new Summary("Event generated in java"));
-        vEvent.add(new Description("And indeed sent by AWS SES"));
+        vEvent.add(new Summary(summary));
+        vEvent.add(new Description(description));
         return vEvent;
     }
 
