@@ -1,15 +1,15 @@
 package com.SesAndSnsTests.domain.model;
 
-public class SnsEndpointReq {
+public class SnsSmsEndpointReq {
     private String message;
     private String phoneNumber;
 
-    public SnsEndpointReq(String message, String phoneNumber) {
+    public SnsSmsEndpointReq(String message, String phoneNumber) {
         this.message = message;
         this.phoneNumber = phoneNumber;
     }
 
-    public SnsEndpointReq() {
+    public SnsSmsEndpointReq() {
     }
 
     public String getPhoneNumber() {

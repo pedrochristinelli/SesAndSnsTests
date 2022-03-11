@@ -6,7 +6,10 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
+import com.amazonaws.services.sns.model.CreateTopicRequest;
+import com.amazonaws.services.sns.model.CreateTopicResult;
 import com.amazonaws.services.sns.model.PublishRequest;
+import com.amazonaws.services.sns.model.SubscribeRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -20,19 +23,41 @@ public class SnsServiceImpl implements SnsService {
 
     @Override
     public void sendSmsMessage(String message, String phone) {
+        AmazonSNS amazonSNS = createSnsClient();
+
+        amazonSNS.publish(new PublishRequest().withMessage(message).withPhoneNumber(phone));
+    }
+
+    @Override
+    public void sendSmsTopicMessage(String message, String topic) {
+        AmazonSNS amazonSNS = createSnsClient();
+
+        amazonSNS.publish(topic, message);
+    }
+
+    @Override
+    public void createSmsTopic(String topicName, String[] endpoints){
+        AmazonSNS amazonSNS = createSnsClient();
+
+        final CreateTopicRequest createTopicRequest = new CreateTopicRequest(topicName);
+        final CreateTopicResult createTopicResult = amazonSNS.createTopic(createTopicRequest);
+
+        String topicArn = createTopicResult.getTopicArn();
+        for (String endpoint: endpoints) {
+            final SubscribeRequest subscribeRequest = new SubscribeRequest(topicArn, "SMS", endpoint);
+            amazonSNS.subscribe(subscribeRequest);
+        }
+    }
+
+    private AmazonSNS createSnsClient(){
         //Used for authenticating to AWS
         BasicAWSCredentials awsCreds = new BasicAWSCredentials(accessKey, secretAccessKey);
 
         //Create SNS Client
-        AmazonSNS snsClient = AmazonSNSClient
+        return AmazonSNSClient
                 .builder()
                 .withRegion(Regions.US_EAST_1)
                 .withCredentials(new AWSStaticCredentialsProvider(awsCreds))
                 .build();
-
-        String SMSMessage = message;
-        String mobile = phone; //Enter your mobile number here
-
-        snsClient.publish(new PublishRequest().withMessage(SMSMessage).withPhoneNumber(mobile));
     }
 }
