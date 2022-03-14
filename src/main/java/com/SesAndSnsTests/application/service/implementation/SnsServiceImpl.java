@@ -6,12 +6,11 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
-import com.amazonaws.services.sns.model.CreateTopicRequest;
-import com.amazonaws.services.sns.model.CreateTopicResult;
-import com.amazonaws.services.sns.model.PublishRequest;
-import com.amazonaws.services.sns.model.SubscribeRequest;
+import com.amazonaws.services.sns.model.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class SnsServiceImpl implements SnsService {
@@ -46,6 +45,26 @@ public class SnsServiceImpl implements SnsService {
         for (String endpoint: endpoints) {
             final SubscribeRequest subscribeRequest = new SubscribeRequest(topicArn, "SMS", endpoint);
             amazonSNS.subscribe(subscribeRequest);
+        }
+    }
+
+    @Override
+    public void addNumberToTopic(String number, String topic) {
+        AmazonSNS amazonSNS = createSnsClient();
+
+        final SubscribeRequest subscribeRequest = new SubscribeRequest(topic, "SMS", number);
+        amazonSNS.subscribe(subscribeRequest);
+    }
+
+    @Override
+    public void removeNumberFromTopic(String number, String topic) {
+        AmazonSNS amazonSNS = createSnsClient();
+
+        List<Subscription> subscriptionList = amazonSNS.listSubscriptionsByTopic(topic).getSubscriptions();
+        for (Subscription subscription: subscriptionList) {
+            if (subscription.getEndpoint().equals(number)){
+                amazonSNS.unsubscribe(subscription.getSubscriptionArn());
+            }
         }
     }
 
