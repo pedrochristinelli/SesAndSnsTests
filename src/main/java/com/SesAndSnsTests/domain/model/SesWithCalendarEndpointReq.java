@@ -1,25 +1,15 @@
 package com.SesAndSnsTests.domain.model;
 
-public class SesEndpointReq {
+public class SesWithCalendarEndpointReq {
     private Email email;
-    private boolean hasCalendarEvent;
     private IcsEvent calendar;
 
-    public SesEndpointReq() {
+    public SesWithCalendarEndpointReq() {
     }
 
-    public SesEndpointReq(Email email, boolean hasCalendarEvent, IcsEvent calendar) {
+    public SesWithCalendarEndpointReq(Email email, IcsEvent calendar) {
         this.email = email;
-        this.hasCalendarEvent = hasCalendarEvent;
         this.calendar = calendar;
-    }
-
-    public boolean isHasCalendarEvent() {
-        return hasCalendarEvent;
-    }
-
-    public void setHasCalendarEvent(boolean hasCalendarEvent) {
-        this.hasCalendarEvent = hasCalendarEvent;
     }
 
     public IcsEvent getCalendar() {
@@ -38,7 +28,7 @@ public class SesEndpointReq {
         this.email = email;
     }
 
-    public SesEndpointReq(Email email) {
+    public SesWithCalendarEndpointReq(Email email) {
         this.email = email;
     }
 }

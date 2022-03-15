@@ -29,10 +29,9 @@ public class CreateCalendarEventServiceImpl implements CreateCalendarEventServic
     }
 
     private VEvent createSingleEvent(Date date, int timeBox, String summary, String description) {
-        //Create a new calendar event that starts on 5th March 2021 at midday Australian Eastern Daylight Savings Time and goes for 1 hour.
         VEvent vEvent = new VEvent();
-        java.time.ZonedDateTime now = java.time.ZonedDateTime.now();
 
+        java.time.ZonedDateTime now = java.time.ZonedDateTime.now();
         //Create a unique ID for the event
         String uidTimestamp = java.time.format.DateTimeFormatter
                 .ofPattern("yyyyMMdd'T'hhmmssXX")

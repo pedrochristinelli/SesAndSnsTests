@@ -1,7 +1,9 @@
 package com.SesAndSnsTests.infrastructure.endpoint;
 
 import com.SesAndSnsTests.application.service.SesService;
-import com.SesAndSnsTests.domain.model.SesEndpointReq;
+import com.SesAndSnsTests.domain.model.Email;
+import com.SesAndSnsTests.domain.model.SesSimpleToMultipleAddressesReq;
+import com.SesAndSnsTests.domain.model.SesWithCalendarEndpointReq;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import org.slf4j.Logger;
@@ -24,10 +26,24 @@ public class SesEndpoint {
         this.sesService = sesService;
     }
 
+    @Operation(summary = "Send an ses message without attachments")
+    @PostMapping("/simple")
+    public void sendSesSimpleEmail(@RequestBody Email email) throws MessagingException {
+        LOGGER.info("Starting to process the endpoint '{}' with the method '{}' with the following request body: {}", "/ses/simple", "POST", email.toString());
+        sesService.sendSimpleEmail(email);
+    }
+
+    @Operation(summary = "Send an ses message without attachments to a list of emails")
+    @PostMapping("/simple-multiple-adresses")
+    public void sendSesSimpleEmailToMultipleAddresses(@RequestBody SesSimpleToMultipleAddressesReq sesSimpleToMultipleAddressesReq) throws MessagingException {
+        LOGGER.info("Starting to process the endpoint '{}' with the method '{}' with the following request body: {}", "/ses/simple", "POST", sesSimpleToMultipleAddressesReq.toString());
+        sesService.sendSimpleEmailToMultipleAddresses(sesSimpleToMultipleAddressesReq.getEmail(), sesSimpleToMultipleAddressesReq.getAddresses());
+    }
+
     @Operation(summary = "Send an ses message")
-    @PostMapping
-    public void sendSes(@RequestBody SesEndpointReq sesEndpointReq) throws MessagingException {
-        LOGGER.info("Starting to process the endpoint '{}' with the method '{}' with the following variable: {}", "/ses", "POST", sesEndpointReq.getEmail().toString());
-        sesService.sendEmailWithAttachment(sesEndpointReq.getEmail(), sesEndpointReq.isHasCalendarEvent(), sesEndpointReq.getCalendar());
+    @PostMapping("/withCalendar")
+    public void sendSesWithCalendar(@RequestBody SesWithCalendarEndpointReq sesWithCalendarEndpointReq) throws MessagingException {
+        LOGGER.info("Starting to process the endpoint '{}' with the method '{}' with the following request body: {}", "/ses/withCalendar", "POST", sesWithCalendarEndpointReq);
+        sesService.sendEmailWithAttachment(sesWithCalendarEndpointReq.getEmail(), sesWithCalendarEndpointReq.getCalendar());
     }
 }

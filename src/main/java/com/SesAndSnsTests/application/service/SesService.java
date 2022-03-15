@@ -6,5 +6,9 @@ import com.SesAndSnsTests.domain.model.IcsEvent;
 import javax.mail.MessagingException;
 
 public interface SesService {
-    void sendEmailWithAttachment(Email email, boolean hasCalendar, IcsEvent icsEvent) throws MessagingException;
+    void sendEmailWithAttachment(Email email, IcsEvent icsEvent) throws MessagingException;
+
+    void sendSimpleEmail(Email email) throws MessagingException;
+
+    void sendSimpleEmailToMultipleAddresses(Email email, String[] addresses) throws MessagingException;
 }

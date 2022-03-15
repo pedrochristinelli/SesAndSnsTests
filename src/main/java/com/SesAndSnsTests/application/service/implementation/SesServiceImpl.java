@@ -14,21 +14,21 @@ import org.springframework.stereotype.Service;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.mail.BodyPart;
+import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 
 @Service
 public class SesServiceImpl implements SesService {
-    private JavaMailSender javaMailSender;
-    private CreateCalendarEventService createCalendarEventService;
+    private final JavaMailSender javaMailSender;
+    private final CreateCalendarEventService createCalendarEventService;
 
     @Autowired
     public SesServiceImpl(JavaMailSender javaMailSender, CreateCalendarEventService createCalendarEventService) {
@@ -37,7 +37,7 @@ public class SesServiceImpl implements SesService {
     }
 
     @Override
-    public void sendEmailWithAttachment(Email email, boolean hasCalendar, IcsEvent icsEvent) throws MessagingException {
+    public void sendEmailWithAttachment(Email email, IcsEvent icsEvent) throws MessagingException {
         MimeMessage message = javaMailSender.createMimeMessage();
         MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, true);
 
@@ -46,41 +46,59 @@ public class SesServiceImpl implements SesService {
         mimeMessageHelper.setSubject(email.getSubject());
         mimeMessageHelper.setPriority(1);
 
-        if (hasCalendar) {
-            BodyPart messageBodyPartText = new MimeBodyPart();
-            messageBodyPartText.setText(email.getText());
+        BodyPart messageBodyPartText = new MimeBodyPart();
+        messageBodyPartText.setText(email.getText());
 
-            DataSource source;
-            Calendar calendar = createCalendarEventService.createEventByDate(icsEvent);
-            InputStream targetStream = null;
-            try {
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                CalendarOutputter outputter = new CalendarOutputter();
-                outputter.output(calendar, out);
-                source = new ByteArrayDataSource(new ByteArrayInputStream(out.toByteArray()), "text/calendar");
+        DataSource source;
+        Calendar calendar = createCalendarEventService.createEventByDate(icsEvent);
 
-                Multipart multipart = new MimeMultipart();
-                BodyPart messageBodyPart = new MimeBodyPart();
-                messageBodyPart.setDataHandler(new DataHandler(source));
-                messageBodyPart.setFileName("event.ics");
+        try {
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            CalendarOutputter calendarOutputter = new CalendarOutputter();
+            calendarOutputter.output(calendar, out);
+            source = new ByteArrayDataSource(new ByteArrayInputStream(out.toByteArray()), "text/calendar");
 
-                multipart.addBodyPart(messageBodyPartText);
-                multipart.addBodyPart(messageBodyPart);
-                message.setContent(multipart);
-                message.saveChanges();
-            } catch (Exception e) {
-                e.printStackTrace();
-            } finally {
-                if (targetStream != null) {
-                    try {
-                        targetStream.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        } else {
-            mimeMessageHelper.setText(email.getText());
+            Multipart multipart = new MimeMultipart();
+            BodyPart messageBodyPartCalendar = new MimeBodyPart();
+            messageBodyPartCalendar.setDataHandler(new DataHandler(source));
+            messageBodyPartCalendar.setFileName("event.ics");
+
+            multipart.addBodyPart(messageBodyPartText);
+            multipart.addBodyPart(messageBodyPartCalendar);
+            message.setContent(multipart);
+            message.saveChanges();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        javaMailSender.send(message);
+    }
+
+    @Override
+    public void sendSimpleEmail(Email email) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, true);
+
+        mimeMessageHelper.setFrom(email.getFrom());
+        mimeMessageHelper.setTo(email.getTo());
+        mimeMessageHelper.setSubject(email.getSubject());
+        mimeMessageHelper.setPriority(1);
+        mimeMessageHelper.setText(email.getText());
+
+        javaMailSender.send(message);
+    }
+
+    @Override
+    public void sendSimpleEmailToMultipleAddresses(Email email, String[] addresses) throws MessagingException {
+        MimeMessage message = javaMailSender.createMimeMessage();
+        MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(message, true);
+        mimeMessageHelper.setFrom(email.getFrom());
+        mimeMessageHelper.setSubject(email.getSubject());
+        mimeMessageHelper.setPriority(1);
+        mimeMessageHelper.setText(email.getText());
+
+        for (String address: addresses) {
+            message.addRecipient(Message.RecipientType.TO, new InternetAddress(address));
         }
 
         javaMailSender.send(message);
